@@ -3,12 +3,32 @@ import * as net from 'net';
 // Uncomment this to pass the first stage
 const server = net.createServer(socket => {
   // socket.write(Buffer.from(`HTTP/1.1 200 OK\r\n\r\n`));
-
+  console.log('Client is connected');
   socket.on('data', data => {
-    const request = data.toString();
-    const path = request.split(' ')[1];
-    const response = path === '/' ? 'HTTP/1.1 200 OK\r\n\r\n' : 'HTTP/1.1 404 Not Found\r\n\r\n';
-    socket.write(response);
+    const dataStr = data.toString('utf-8');
+    console.log('Data received: ' + dataStr);
+
+    const path = dataStr.split('\r\n')[0].split(' ')[1];
+    console.log('Path: ' + path);
+
+    const query = path.split('/')[2];
+    console.log('pathBody: ' + query);
+
+    if (path === '/') {
+      socket.write('HTTP/1.1 200 OK\r\n\r\n');
+    } else if (path === `/echo/${query}`) {
+      socket.write(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${query.length}\r\n\r\n${query}`);
+    } else {
+      socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+    }
+
+    // const response = path.startsWith('/echo/')
+    //   ? 'HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ' +
+    //       (path.split('/').pop() ?? '').length +
+    //       '\r\n\r\n' +
+    //       path.split('/').pop() ?? ''
+    //   : 'HTTP/1.1 404 Not Found\r\n\r\n';
+    console.log('Client is disconnected');
     socket.end();
   });
 });
