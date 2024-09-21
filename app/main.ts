@@ -2,11 +2,15 @@ import * as net from 'net';
 
 // Uncomment this to pass the first stage
 const server = net.createServer(socket => {
-  socket.write(Buffer.from(`HTTP/1.1 200 OK\r\n\r\n`));
+  // socket.write(Buffer.from(`HTTP/1.1 200 OK\r\n\r\n`));
 
-  // socket.on('close', () => {
-  socket.end();
-  // });
+  socket.on('data', data => {
+    const request = data.toString();
+    const path = request.split(' ')[1];
+    const response = path === '/' ? 'HTTP/1.1 200 OK\r\n\r\n' : 'HTTP/1.1 404 Not Found\r\n\r\n';
+    socket.write(response);
+    socket.end();
+  });
 });
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -34,4 +38,18 @@ OK        // Optional reason phrase
 Response body (empty)
 
 */
+
+// Extract URL path
+// Request line
+// GET                          // HTTP method
+// /index.html                  // Request target
+// HTTP/1.1                     // HTTP version
+// \r\n                         // CRLF that marks the end of the request line
+
+// Headers
+// Host: localhost:4221\r\n     // Header that specifies the server's host and port
+// User-Agent: curl/7.64.1\r\n  // Header that describes the client's user agent
+// Accept: */*\r\n              // Header that specifies which media types the client can accept
+// \r\n                         // CRLF that marks the end of the headers
+// Request body (empty)
 
