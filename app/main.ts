@@ -5,30 +5,31 @@ const server = net.createServer(socket => {
   // socket.write(Buffer.from(`HTTP/1.1 200 OK\r\n\r\n`));
   console.log('Client is connected');
   socket.on('data', data => {
-    const dataStr = data.toString('utf-8');
-    console.log('Data received: ' + dataStr);
-
-    const path = dataStr.split('\r\n')[0].split(' ')[1];
-    console.log('Path: ' + path);
-
-    const query = path.split('/')[2];
-    console.log('pathBody: ' + query);
-
-    if (path === '/') {
-      socket.write('HTTP/1.1 200 OK\r\n\r\n');
-    } else if (path === `/echo/${query}`) {
-      socket.write(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${query.length}\r\n\r\n${query}`);
-    } else {
-      socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+    const request = data.toString();
+    console.log(request);
+    const path = request.split(' ')[1];
+    console.log(path.split('/')[1]);
+    const params = path.split('/')[1];
+    let response: string;
+    function changeResponse(response: string): void {
+      socket.write(response);
+      socket.end();
     }
-
-    // const response = path.startsWith('/echo/')
-    //   ? 'HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ' +
-    //       (path.split('/').pop() ?? '').length +
-    //       '\r\n\r\n' +
-    //       path.split('/').pop() ?? ''
-    //   : 'HTTP/1.1 404 Not Found\r\n\r\n';
-    console.log('Client is disconnected');
+    if (params === '') {
+      response = 'HTTP/1.1 200 OK\r\n\r\n';
+      changeResponse(response);
+    } else if (params === 'echo') {
+      const message = path.split('/')[2];
+      response = `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${message.length}\r\n\r\n${message}`;
+      changeResponse(response);
+    } else if (params === 'user-agent') {
+      const userAgent = request.split('User-Agent: ')[1].split('\r\n')[0];
+      response = `HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${userAgent.length}\r\n\r\n${userAgent}`;
+      changeResponse(response);
+    } else {
+      response = 'HTTP/1.1 404 Not Found\r\n\r\n';
+      changeResponse(response);
+    }
     socket.end();
   });
 });
